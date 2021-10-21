@@ -1,0 +1,19 @@
+FROM busybox AS build-env
+ENV OPENVSCODE_SERVER_VERSION 1.60.2
+ADD https://github.com/gitpod-io/openvscode-server/releases/download/openvscode-server-v${OPENVSCODE_SERVER_VERSION}/openvscode-server-v${OPENVSCODE_SERVER_VERSION}-linux-x64.tar.gz /tmp
+RUN cd /tmp/ && \
+    tar -xzf openvscode-server-v${OPENVSCODE_SERVER_VERSION}-linux-x64.tar.gz && \
+    mv openvscode-server-v${OPENVSCODE_SERVER_VERSION}-linux-x64 vscode && \
+    rm openvscode-server-v${OPENVSCODE_SERVER_VERSION}-linux-x64.tar.gz
+
+### CUSTOM CONTAINER SPECS HERE
+FROM python:3-slim
+### CUSTOM CONTAINER SPECS HERE
+RUN     yes | pip install ansible
+RUN	apt update && apt-get install -y git  
+
+RUN git config --global credential.helper store
+
+COPY --from=build-env /tmp/ /
+WORKDIR /vscode
+ENTRYPOINT ["./server.sh"]
